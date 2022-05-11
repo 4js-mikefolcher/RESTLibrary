@@ -6,6 +6,11 @@ IMPORT com
 IMPORT util
 IMPORT FGL sqlHelper
 
+PUBLIC DEFINE responseError RECORD ATTRIBUTE(WSError="Response Error", json_name="responseError")
+	respCode INTEGER,
+	respMessage STRING
+END RECORD
+
 ##############################################################################################
 #+
 #+ startService Starts the web service process and returns a string when it is stopped
@@ -67,10 +72,14 @@ PUBLIC FUNCTION getAllRecords(tableName STRING ATTRIBUTES(WSParam))
     LET jsonArray = sqlHelper.getTableRecords(tableName, -1, -1)
 
     IF jsonArray IS NULL THEN
-        CALL com.WebServiceEngine.SetRestError(500, NULL)
+        LET responseError.respCode = "999"
+        LET responseError.respMessage = SFMT("Table %1 does not exist", tableName)
+        CALL com.WebServiceEngine.SetRestError(500, responseError)
     ELSE 
         IF jsonArray.getLength() == 0 THEN
-            CALL com.WebServiceEngine.SetRestError(404, NULL)
+            LET responseError.respCode = "100"
+            LET responseError.respMessage = SFMT("Table %1 does not have any records", tableName)
+            CALL com.WebServiceEngine.SetRestError(404, responseError)
         END IF
     END IF
 
@@ -221,7 +230,6 @@ END FUNCTION
 PUBLIC FUNCTION insertTableRecord(tableName STRING ATTRIBUTES(WSParam), jsonObj util.JSONObject)
   ATTRIBUTES(WSPost,
              WSPath="/table/{tableName}",
-             WSMedia="application/json",
              WSDescription='Create a new record',
              WSThrows="404:Not Found")
   RETURNS STRING
@@ -260,7 +268,6 @@ PUBLIC FUNCTION updateTableRecord(tableName STRING ATTRIBUTES(WSParam),
                                   jsonObj util.JSONObject)
   ATTRIBUTES(WSPut,
              WSPath="/table/{tableName}",
-             WSMedia="application/json",
              WSDescription='Update a record',
              WSThrows="404:Not Found")
  RETURNS STRING
@@ -298,7 +305,6 @@ PUBLIC FUNCTION deleteTableRecord(tableName STRING ATTRIBUTES(WSParam),
                                   colValue STRING ATTRIBUTES(WSQuery, WSName = "value"))
   ATTRIBUTES(WSDelete,
              WSPath="/table/{tableName}",
-             WSMedia="application/json",
              WSDescription='Delete a record',
              WSThrows="404:Not Found")
  RETURNS STRING
