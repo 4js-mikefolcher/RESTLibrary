@@ -11,6 +11,8 @@ PUBLIC DEFINE responseError RECORD ATTRIBUTE(WSError="Response Error", json_name
 	respMessage STRING
 END RECORD
 
+PRIVATE DEFINE httpContext DICTIONARY ATTRIBUTE(WSContext)OF STRING
+
 ##############################################################################################
 #+
 #+ startService Starts the web service process and returns a string when it is stopped
