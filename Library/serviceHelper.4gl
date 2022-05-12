@@ -5,13 +5,16 @@
 IMPORT com
 IMPORT util
 IMPORT FGL sqlHelper
+IMPORT FGL UserScopes
 
 PUBLIC DEFINE responseError RECORD ATTRIBUTE(WSError="Response Error", json_name="responseError")
 	respCode INTEGER,
 	respMessage STRING
 END RECORD
 
-PRIVATE DEFINE httpContext DICTIONARY ATTRIBUTE(WSContext)OF STRING
+PUBLIC DEFINE useScopes BOOLEAN = TRUE
+
+PRIVATE DEFINE httpContext DICTIONARY ATTRIBUTE(WSContext) OF STRING
 
 ##############################################################################################
 #+
@@ -71,6 +74,10 @@ PUBLIC FUNCTION getAllRecords(tableName STRING ATTRIBUTES(WSParam))
 
     DEFINE jsonArray  util.JSONArray
 
+	 IF NOT authorizationCheck(tableName, UserScopes.cFetchOperation) THEN
+		 RETURN jsonArray
+	 END IF
+
     LET jsonArray = sqlHelper.getTableRecords(tableName, -1, -1)
 
     IF jsonArray IS NULL THEN
@@ -103,6 +110,10 @@ PUBLIC FUNCTION getRecordCount(tableName STRING ATTRIBUTES(WSParam))
 
     DEFINE lCount  INTEGER
 
+	 IF NOT authorizationCheck(tableName, UserScopes.cFetchOperation) THEN
+		 RETURN lCount
+	 END IF
+
     LET lCount = sqlHelper.getTableRecordCount(tableName)
 
     IF lCount IS NULL THEN
@@ -114,6 +125,37 @@ PUBLIC FUNCTION getRecordCount(tableName STRING ATTRIBUTES(WSParam))
     END IF
 
     RETURN lCount
+
+END FUNCTION
+
+##############################################################################################
+#+
+#+ getRecordCount Gets and returns all number of records in a table
+#+
+##############################################################################################
+PUBLIC FUNCTION getSchema(tableName STRING ATTRIBUTES(WSParam))
+    ATTRIBUTES(WSGet,
+               WSPath = "/table/{tableName}/schema",
+               WSDescription = 'Fetches the table schema for the specified table',
+               WSThrows = "404:Not Found")
+    RETURNS util.JSONObject
+
+    DEFINE jsonObj util.JSONObject
+	 DEFINE schemaList DICTIONARY OF STRING
+
+	 IF NOT authorizationCheck(tableName, UserScopes.cFetchOperation) THEN
+		 RETURN jsonObj
+	 END IF
+
+    LET schemaList = sqlHelper.getTableSchema(tableName)
+
+    IF schemaList.getLength() == 0 THEN
+		 CALL com.WebServiceEngine.SetRestError(404, NULL)
+	 ELSE
+		 LET jsonObj = util.JSONObject.fromFGL(schemaList)
+    END IF
+
+    RETURN jsonObj
 
 END FUNCTION
 
@@ -131,6 +173,10 @@ PUBLIC FUNCTION getRecordsWithLimit(tableName STRING ATTRIBUTES(WSParam),
     RETURNS util.JSONArray ATTRIBUTES(WSMedia = "application/json")
 
     DEFINE jsonArray  util.JSONArray
+
+	 IF NOT authorizationCheck(tableName, UserScopes.cFetchOperation) THEN
+		 RETURN jsonArray
+	 END IF
 
     LET jsonArray = sqlHelper.getTableRecords(tableName, recLimit, -1)
 
@@ -165,6 +211,10 @@ PUBLIC FUNCTION getRecordsWithLimitOffset(tableName STRING ATTRIBUTES(WSParam),
 
     DEFINE jsonArray  util.JSONArray
 
+	 IF NOT authorizationCheck(tableName, UserScopes.cFetchOperation) THEN
+		 RETURN jsonArray
+	 END IF
+
     LET jsonArray = sqlHelper.getTableRecords(tableName, recLimit, recOffset)
 
     IF jsonArray IS NULL THEN
@@ -198,6 +248,10 @@ PUBLIC FUNCTION getRecordsQuery(tableName STRING ATTRIBUTES(WSParam),
     RETURNS util.JSONArray ATTRIBUTES(WSMedia = "application/json")
 
     DEFINE jsonArray  util.JSONArray
+
+	 IF NOT authorizationCheck(tableName, UserScopes.cFetchOperation) THEN
+		 RETURN jsonArray
+	 END IF
 
     IF colName IS NULL OR colName.getLength() == 0 THEN
         LET jsonArray = sqlHelper.getTableRecords(tableName, -1, -1)
@@ -238,6 +292,10 @@ PUBLIC FUNCTION insertTableRecord(tableName STRING ATTRIBUTES(WSParam), jsonObj 
 
     DEFINE lStatusCode      INTEGER
 
+	 IF NOT authorizationCheck(tableName, UserScopes.cInsertOperation) THEN
+		 RETURN NULL
+	 END IF
+
     IF jsonObj IS NULL OR jsonObj.toString().getLength() == 0 THEN
         CALL com.WebServiceEngine.SetRestError(404, NULL)
         RETURN "Error 404"
@@ -276,6 +334,10 @@ PUBLIC FUNCTION updateTableRecord(tableName STRING ATTRIBUTES(WSParam),
 
     DEFINE lStatusCode      INTEGER = 0
 
+	 IF NOT authorizationCheck(tableName, UserScopes.cUpdateOperation) THEN
+		 RETURN NULL
+	 END IF
+
     IF jsonObj IS NULL OR jsonObj.toString().getLength() == 0 THEN
         CALL com.WebServiceEngine.SetRestError(404, NULL)
         RETURN "Error 404"
@@ -292,7 +354,7 @@ PUBLIC FUNCTION updateTableRecord(tableName STRING ATTRIBUTES(WSParam),
         RETURN SFMT("Error %1", lStatusCode)
     END IF
 
- RETURN "Success 200"
+    RETURN "Success 200"
 
 END FUNCTION
 
@@ -313,6 +375,10 @@ PUBLIC FUNCTION deleteTableRecord(tableName STRING ATTRIBUTES(WSParam),
 
     DEFINE lStatusCode      INTEGER = 0
 
+	 IF NOT authorizationCheck(tableName, UserScopes.cDeleteOperation) THEN
+		 RETURN NULL
+	 END IF
+
     IF tableName.getLength() == 0 OR colName.getLength() == 0 OR colValue.getLength() == 0 THEN
         CALL com.WebServiceEngine.SetRestError(404, NULL)
         RETURN "Error 404"
@@ -327,3 +393,22 @@ PUBLIC FUNCTION deleteTableRecord(tableName STRING ATTRIBUTES(WSParam),
  RETURN "Success 200"
 
 END FUNCTION
+
+PRIVATE FUNCTION authorizationCheck(tabname STRING, operation STRING) RETURNS BOOLEAN
+	DEFINE userScopes TUserScopes
+
+	IF NOT useScopes THEN
+		RETURN TRUE
+	END IF
+
+	CALL userScopes.init(httpContext["scopes"])
+	IF userScopes.hasTableOperation(tabname, operation) THEN
+		RETURN TRUE
+	END IF
+
+	LET responseError.respCode = "403"
+	LET responseError.respMessage = "User not authorized"
+	CALL com.WebServiceEngine.SetRestError(403, responseError)
+	RETURN FALSE
+
+END FUNCTION #authorizationCheck

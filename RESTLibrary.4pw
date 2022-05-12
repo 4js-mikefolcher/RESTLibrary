@@ -71,6 +71,7 @@
     <Library binaryName="Library" dependencies="1986" id="14000" label="Library">
       <File filePath="Library/serviceHelper.4gl"/>
       <File filePath="Library/sqlHelper.4gl"/>
+      <File filePath="Library/UserScopes.4gl"/>
     </Library>
   </Group>
 </Project>

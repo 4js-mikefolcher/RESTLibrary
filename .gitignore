@@ -1,0 +1,10 @@
+#File extensions
+*.4pwcfg
+*.4pwdb
+*.4pwvs
+*.42?
+*.log
+
+#Directories
+bin/
+

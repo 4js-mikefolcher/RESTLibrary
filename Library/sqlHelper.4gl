@@ -122,7 +122,7 @@ PUBLIC FUNCTION getTableQuery(tableName STRING, colName STRING, colValue STRING,
             #Fetch each record
             CALL sqlObj.fetch()
             
-            IF SQLCA.sqlcode == NOTFOUND THEN
+            IF sqlca.sqlcode == NOTFOUND THEN
                 LET lMoreRecords = FALSE
             ELSE
                 #Build the JSON Object
@@ -340,6 +340,31 @@ PUBLIC FUNCTION deleteRecordWithColumnValue(tableName STRING, colName STRING, co
     RETURN lErrorStatus
 
 END FUNCTION
+
+PUBLIC FUNCTION getTableSchema(tableName STRING) RETURNS DICTIONARY OF STRING
+	DEFINE schemaList DICTIONARY OF STRING
+	DEFINE idx INTEGER
+
+	#Initialize the SQL Statement and JSON Array
+	VAR sqlStmt = SFMT("SELECT * FROM %1", tableName)
+
+	TRY
+		VAR sqlObj = base.SqlHandle.create()
+		CALL sqlObj.prepare(sqlStmt)
+		CALL sqlObj.open()
+		FOR idx = 1 TO sqlObj.getResultCount()
+           VAR colName = sqlObj.getResultName(idx)
+           VAR colType = sqlObj.getResultType(idx)
+			  LET schemaList[colName] = colType
+       END FOR
+		 CALL sqlObj.close()
+	 CATCH
+		CALL schemaList.clear()
+	 END TRY
+
+	 RETURN schemaList
+
+END FUNCTION #getTableSchema
 
 PRIVATE FUNCTION errorHandler()
     CALL ERRORLOG(SFMT("Error Code: %1", STATUS))
