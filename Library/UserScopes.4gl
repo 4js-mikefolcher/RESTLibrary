@@ -1,3 +1,5 @@
+PACKAGE com.fourjs.RESTLibrary
+
 PUBLIC CONSTANT cInsertOperation = "insert"
 PUBLIC CONSTANT cUpdateOperation = "update"
 PUBLIC CONSTANT cDeleteOperation = "delete"

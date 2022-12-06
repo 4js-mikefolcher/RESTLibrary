@@ -2,10 +2,12 @@
 # serverHelper.4gl provides functions to define URI endpoints for GET, POST, PUT, and DELETE
 # without relying on the database schema.
 ##############################################################################################
+PACKAGE com.fourjs.RESTLibrary
+
 IMPORT com
 IMPORT util
-IMPORT FGL sqlHelper
-IMPORT FGL UserScopes
+IMPORT FGL com.fourjs.RESTLibrary.SQLHelper
+IMPORT FGL com.fourjs.RESTLibrary.UserScopes
 
 PUBLIC DEFINE responseError RECORD ATTRIBUTE(WSError="Response Error", json_name="responseError")
 	respCode INTEGER,
@@ -78,7 +80,7 @@ PUBLIC FUNCTION getAllRecords(tableName STRING ATTRIBUTES(WSParam))
 		 RETURN jsonArray
 	 END IF
 
-    LET jsonArray = sqlHelper.getTableRecords(tableName, -1, -1)
+    LET jsonArray = SQLHelper.getTableRecords(tableName, -1, -1)
 
     IF jsonArray IS NULL THEN
         LET responseError.respCode = "999"
@@ -114,7 +116,7 @@ PUBLIC FUNCTION getRecordCount(tableName STRING ATTRIBUTES(WSParam))
 		 RETURN lCount
 	 END IF
 
-    LET lCount = sqlHelper.getTableRecordCount(tableName)
+    LET lCount = SQLHelper.getTableRecordCount(tableName)
 
     IF lCount IS NULL THEN
         CALL com.WebServiceEngine.SetRestError(500, NULL)
@@ -147,7 +149,7 @@ PUBLIC FUNCTION getSchema(tableName STRING ATTRIBUTES(WSParam))
 		 RETURN jsonObj
 	 END IF
 
-    LET schemaList = sqlHelper.getTableSchema(tableName)
+    LET schemaList = SQLHelper.getTableSchema(tableName)
 
     IF schemaList.getLength() == 0 THEN
 		 CALL com.WebServiceEngine.SetRestError(404, NULL)
@@ -178,7 +180,7 @@ PUBLIC FUNCTION getRecordsWithLimit(tableName STRING ATTRIBUTES(WSParam),
 		 RETURN jsonArray
 	 END IF
 
-    LET jsonArray = sqlHelper.getTableRecords(tableName, recLimit, -1)
+    LET jsonArray = SQLHelper.getTableRecords(tableName, recLimit, -1)
 
     IF jsonArray IS NULL THEN
         CALL com.WebServiceEngine.SetRestError(500, NULL)
@@ -215,7 +217,7 @@ PUBLIC FUNCTION getRecordsWithLimitOffset(tableName STRING ATTRIBUTES(WSParam),
 		 RETURN jsonArray
 	 END IF
 
-    LET jsonArray = sqlHelper.getTableRecords(tableName, recLimit, recOffset)
+    LET jsonArray = SQLHelper.getTableRecords(tableName, recLimit, recOffset)
 
     IF jsonArray IS NULL THEN
         CALL com.WebServiceEngine.SetRestError(500, NULL)
@@ -254,14 +256,14 @@ PUBLIC FUNCTION getRecordsQuery(tableName STRING ATTRIBUTES(WSParam),
 	 END IF
 
     IF colName IS NULL OR colName.getLength() == 0 THEN
-        LET jsonArray = sqlHelper.getTableRecords(tableName, -1, -1)
+        LET jsonArray = SQLHelper.getTableRecords(tableName, -1, -1)
     ELSE
         IF contains.getLength() > 0 THEN
             LET contains = "%", contains.trim(),"%"
-            LET jsonArray = sqlHelper.getTableQuery(tableName, colName.trim(), contains, TRUE)
+            LET jsonArray = SQLHelper.getTableQuery(tableName, colName.trim(), contains, TRUE)
         ELSE 
             IF colValue.getLength() > 0 THEN
-                 LET jsonArray = sqlHelper.getTableQuery(tableName, colName.trim(), colValue.trim(), FALSE)
+                 LET jsonArray = SQLHelper.getTableQuery(tableName, colName.trim(), colValue.trim(), FALSE)
             END IF
         END IF
     END IF
@@ -306,7 +308,7 @@ PUBLIC FUNCTION insertTableRecord(tableName STRING ATTRIBUTES(WSParam), jsonObj 
         RETURN "Error 404"
     END IF
 
-    LET lStatusCode = sqlHelper.insertFromJSON(tableName, jsonObj)
+    LET lStatusCode = SQLHelper.insertFromJSON(tableName, jsonObj)
     IF lStatusCode > 0 THEN
         CALL com.WebServiceEngine.SetRestError(lStatusCode, NULL)
         RETURN SFMT("Error %1", lStatusCode)
@@ -348,7 +350,7 @@ PUBLIC FUNCTION updateTableRecord(tableName STRING ATTRIBUTES(WSParam),
         RETURN "Error 404"
     END IF
 
-    LET lStatusCode = sqlHelper.updateFromJSON(tableName, colName, colValue, jsonObj)
+    LET lStatusCode = SQLHelper.updateFromJSON(tableName, colName, colValue, jsonObj)
     IF lStatusCode > 0 THEN
         CALL com.WebServiceEngine.SetRestError(lStatusCode, NULL)
         RETURN SFMT("Error %1", lStatusCode)
@@ -384,7 +386,7 @@ PUBLIC FUNCTION deleteTableRecord(tableName STRING ATTRIBUTES(WSParam),
         RETURN "Error 404"
     END IF
 
-    LET lStatusCode = sqlHelper.deleteRecordWithColumnValue(tableName, colName, colValue)
+    LET lStatusCode = SQLHelper.deleteRecordWithColumnValue(tableName, colName, colValue)
     IF lStatusCode > 0 THEN
         CALL com.WebServiceEngine.SetRestError(lStatusCode, NULL)
         RETURN SFMT("Error %1", lStatusCode)
@@ -395,7 +397,7 @@ PUBLIC FUNCTION deleteTableRecord(tableName STRING ATTRIBUTES(WSParam),
 END FUNCTION
 
 PRIVATE FUNCTION authorizationCheck(tabname STRING, operation STRING) RETURNS BOOLEAN
-	DEFINE userScopes TUserScopes
+	DEFINE userScopes UserScopes.TUserScopes
 
 	IF NOT useScopes THEN
 		RETURN TRUE
