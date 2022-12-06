@@ -29,7 +29,7 @@ END FUNCTION #hasScope
 
 PUBLIC FUNCTION (self TUserScopes) hasTableOperation(tabname STRING, operation STRING) RETURNS BOOLEAN
 
-	VAR scopeValue = SFMT("%1.%2", tabname, operation)
+	VAR scopeValue = SFMT("Role.%1.%2", tabname, operation)
 	RETURN self.hasScope(scopeValue)
 
 END FUNCTION #hasTableOperation
