@@ -12,23 +12,23 @@ Example Code Snippet from Genero-REST
 ------------------------------------------------
 
 IMPORT com
-IMPORT FGL serviceHelper
+IMPORT FGL com.fourjs.RESTLibrary.ServiceHelper
 
 MAIN
   DEFINE lMessage STRING
   CONNECT TO "custdemo"
-  CALL com.WebServiceEngine.RegisterRestService("serviceHelper","custdemo")
+  CALL com.WebServiceEngine.RegisterRestService("ServiceHelper","custdemo")
 
   CALL STARTLOG("custdemoService.log")
 
   DISPLAY "Server started"
-  LET lMessage = serviceHelper.startService()
+  LET lMessage = ServiceHelper.startService()
   DISPLAY lMessage
 
 END MAIN
 
 ------------------------------------------------
-serviceHelper.4gl: Defines the web service URI's
+ServiceHelper.4gl: Defines the web service URI's
 ------------------------------------------------
 Get All Records: /table/{tableName}
 
@@ -51,7 +51,7 @@ Put Record: /table/{tableName}?column={colName}&value={colValue}
 Delete Record: /table/{tableName}?column={colName}&value={colValue}
 
 ---------------------------------------------
-sqlHelper.4gl: Defines the database interface
+SQLHelper.4gl: Defines the database interface
 ---------------------------------------------
 PUBLIC FUNCTION getTableRecords(tableName STRING, recLimit INTEGER, recOffset INTEGER) 
  RETURNS util.JSONArray
