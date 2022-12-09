@@ -4,6 +4,7 @@
 *.4pwvs
 *.42?
 *.log
+.DS_Store
 
 #Directories
 bin/
