@@ -10,7 +10,7 @@ update, and delete statements.
 ------------------------------------------------
 Example Code Snippet from Genero-REST
 ------------------------------------------------
-
+```
 IMPORT com
 IMPORT FGL com.fourjs.RESTLibrary.ServiceHelper
 
@@ -26,6 +26,7 @@ MAIN
   DISPLAY lMessage
 
 END MAIN
+```
 
 ------------------------------------------------
 ServiceHelper.4gl: Defines the web service URI's
@@ -53,6 +54,7 @@ Delete Record: /table/{tableName}?column={colName}&value={colValue}
 ---------------------------------------------
 SQLHelper.4gl: Defines the database interface
 ---------------------------------------------
+```
 PUBLIC FUNCTION getTableRecords(tableName STRING, recLimit INTEGER, recOffset INTEGER) 
  RETURNS util.JSONArray
  
@@ -71,5 +73,5 @@ PUBLIC FUNCTION updateFromJSON(tableName STRING,
  
 PUBLIC FUNCTION deleteRecordWithColumnValue(tableName STRING, colName STRING, colValue STRING)
  RETURNS INTEGER
- 
+```
 
